@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "<=5.0.0,>=4.2.0"
+djangorestframework = "*"
+pyyaml = "*"
+requests = "*"
+django-cors-headers = "*"
+psycopg2-binary = "*"
+uritemplate = "*"
+django-rest-swagger = "*"
+django-cockroachdb = "==5.0.*"
+dj-database-url = "*"
+rest-framework-simplejwt = "*"
+drf-yasg = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
