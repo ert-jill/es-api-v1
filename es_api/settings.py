@@ -32,7 +32,7 @@ DEBUG = True
 # CORS_ORIGIN_ALLOW_ALL = True
 # Application definition
 # CSRF_COOKIE_SECURE = True
-
+ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
