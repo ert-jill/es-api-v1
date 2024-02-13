@@ -237,13 +237,9 @@ class UserCreatedBySeriaizer(serializers.ModelSerializer):
 
 
 class CreateOrderSerializer(serializers.ModelSerializer):
-    # created_by_user = UserSerializer(write_only=True)
-    # order_items = OrderItemSerializer(many=True, required=False, allow_empty=True)
+    
     order_items = OrderItemSerializer(many=True, read_only=True)
 
-    # def _get_children(self, obj):
-    #     serializer = OrderItemSerializer(obj.child_list(), many=True)
-    #     return serializer.data
     class Meta:
         model = Order
         fields = (
