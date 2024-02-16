@@ -1,10 +1,11 @@
 # from django.http import HttpResponse, JsonResponse
 # import json
 # from django.forms.models import model_to_dict
-from rest_framework.decorators import  permission_classes, action
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from account.models import Account
 from account.serializers import AccountSerializer
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.viewsets import ViewSet
@@ -15,13 +16,15 @@ from user.tokens import get_user_from_token
 
 class AccountViewSet(ViewSet):
 
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         request_body=AccountSerializer,
         responses={status.HTTP_201_CREATED: AccountSerializer},
         operation_description="Create account end-point",
         tags=["Account"],
     )
-    @permission_classes([IsAuthenticated])
+    # @permission_classes([IsAuthenticated])
     def create(self, request, *args, **kwargs):
         user = get_user_from_token(request.auth)
 
@@ -46,7 +49,36 @@ class AccountViewSet(ViewSet):
             return Response(
                 data=account_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
+    
+    def list(self, request):
+        queryset = Account.objects.all()
+        serializer = AccountSerializer(queryset, many=True)
+        return Response(serializer.data)
 
+    def retrieve(self, request, pk=None):
+        queryset = Account.objects.all()
+        model = get_object_or_404(queryset, pk=pk)
+        serializer = AccountSerializer(model)
+        return Response(serializer.data)
+    
+    @swagger_auto_schema(
+        request_body=AccountSerializer,
+        responses={status.HTTP_200_OK: AccountSerializer},
+        operation_description="Update account end-point",
+        tags=["Account"],
+    )
+    def update(self, request, pk=None):
+        model = Account.objects.get(pk=pk)
+        serializer = AccountSerializer(model, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, pk=None):
+        model = Account.objects.get(pk=pk)
+        model.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 # drf api view
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])

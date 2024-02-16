@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "product",
     "order",
     "classification",
+    "discount",
 ]
 
 SIMPLE_JWT = {
