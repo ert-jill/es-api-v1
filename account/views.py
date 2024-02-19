@@ -20,11 +20,10 @@ class AccountViewSet(ViewSet):
 
     @swagger_auto_schema(
         request_body=AccountSerializer,
-        responses={status.HTTP_201_CREATED: AccountSerializer},
-        operation_description="Create account end-point",
+        responses={201: AccountSerializer()},
+        operation_summary="Create an account",
         tags=["Account"],
     )
-    # @permission_classes([IsAuthenticated])
     def create(self, request, *args, **kwargs):
         user = get_user_from_token(request.auth)
 
@@ -49,22 +48,30 @@ class AccountViewSet(ViewSet):
             return Response(
                 data=account_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
-    
+    @swagger_auto_schema(
+        responses={200: AccountSerializer(many=True)},
+        operation_summary="List all accounts",
+        tags=["Account"],
+    )
     def list(self, request):
         queryset = Account.objects.all()
         serializer = AccountSerializer(queryset, many=True)
         return Response(serializer.data)
-
+    
+    @swagger_auto_schema(
+        responses={200: AccountSerializer()},
+        operation_summary="Retrieve an account",
+        tags=["Account"],
+    )
     def retrieve(self, request, pk=None):
-        queryset = Account.objects.all()
-        model = get_object_or_404(queryset, pk=pk)
+        model = get_object_or_404(Account, pk=pk)
         serializer = AccountSerializer(model)
         return Response(serializer.data)
     
     @swagger_auto_schema(
         request_body=AccountSerializer,
-        responses={status.HTTP_200_OK: AccountSerializer},
-        operation_description="Update account end-point",
+        responses={200: AccountSerializer()},
+        operation_summary="Update an account",
         tags=["Account"],
     )
     def update(self, request, pk=None):
@@ -75,100 +82,12 @@ class AccountViewSet(ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @swagger_auto_schema(
+        responses={204: None},
+        operation_summary="Delete an account",
+        tags=["Account"],
+    )
     def destroy(self, request, pk=None):
         model = Account.objects.get(pk=pk)
         model.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-# drf api view
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# @authentication_classes([JWTAuthentication])
-# def get_account_by_id(request,pk):
-#     instance = Account.objects.get(pk=pk)
-#     if instance:
-#     # Serialize the data
-#         serializer = AccountSerializer(instance)
-
-#         # Return the serialized data as JSON response
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     else:
-#         # Handle the case where no data was fetched
-#         return Response({"message": "No data found"}, status=status.HTTP_404_NOT_FOUND)
-
-# @api_view(['GET'])
-# def get_accounts(request, *args, **kwargs):
-#     all_objects = Account.objects.all()
-   
-#     if all_objects.exists():
-#         # Serialize the data
-#         serializer = AccountSerializer(all_objects, many=True)
-
-#         # Return the serialized data as JSON response
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     else:
-#         # Handle the case where no data was fetched
-#         return Response({"message": "No data found"}, status=status.HTTP_404_NOT_FOUND)
-
-
-# @api_view(['POST'])
-# def insert(request, *args, **kwargs):
-#     serializer = AccountSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#         print(serializer.data)
-#         data = serializer.data
-#         return Response(data)
-    
-    
-
-# # @api_view(['PUT'])
-# # def update(request, pk):
-# #     try:
-# #         # Retrieve the object by ID
-# #         obj = Account.objects.get(pk=pk)
-# #     except Account.DoesNotExist:
-# #         return Response({"message": "Object not found"}, status=status.HTTP_404_NOT_FOUND)
-
-# #     # Serialize the existing object with the updated data
-# #     serializer = AccountSerializer(obj, data = request.data)
-
-# #     if serializer.is_valid():
-# #         # Save the updated object
-# #         serializer.save()
-# #         return Response(serializer.data, status=status.HTTP_200_OK)
-# #     else:
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# @api_view(['PATCH'])
-# def update(request, pk):
-#     try:
-#         # Retrieve the object by ID
-#         obj = Account.objects.get(pk=pk)
-#     except Account.DoesNotExist:
-#         return Response({"message": "Object not found"}, status=status.HTTP_404_NOT_FOUND)
-
-#     # Serialize the existing object with the partially updated data
-#     serializer = AccountSerializer(obj, data=request.data, partial=True)
-
-#     if serializer.is_valid():
-#         # Save the partially updated object
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     else:
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# def create_account(request,*args,**kwargs):
-#     data = {}
-
-#     print(data)
-#     body = request.body
-#     try:
-#         data = json.loads(body)
-#     except:
-#         pass
-#     # param = request.param
-#     print(request.GET)
-#     data['params'] = dict(request.GET)
-#     # data['headers'] = dict(request.headers)
-#     print(data)
-#     return JsonResponse(data);

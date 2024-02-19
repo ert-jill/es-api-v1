@@ -2,12 +2,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from account.models import Account
 from order.models import Order, OrderItem
+from product.models import Product
 # Create your models here.
 
 class Discount(models.Model):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
     description = models.TextField()
+    discounted_product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True, related_name='discount_product')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     amount_type = models.CharField(max_length=25) #amount or percentage
     is_active = models.BooleanField(default=True)

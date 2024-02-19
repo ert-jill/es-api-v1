@@ -8,15 +8,15 @@ from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 class DiscountViewSet(viewsets.ViewSet):
 
-    permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(responses={200: DiscountSerializer(many=True)}, tags=["Discounts"])
+    permission_classes = [IsAuthenticated]
+    @swagger_auto_schema(responses={200: DiscountSerializer(many=True)}, tags=["Discount"])
     def list(self, request):
         queryset = Discount.objects.all()
         serializer = DiscountSerializer(queryset, many=True)
         return Response(serializer.data)
     
-    @swagger_auto_schema(request_body=DiscountSerializer, responses={201: DiscountSerializer()}, tags=["Discounts"])
+    @swagger_auto_schema(request_body=DiscountSerializer, responses={201: DiscountSerializer()}, tags=["Discount"])
     def create(self, request):
         
         serializer = DiscountSerializer(data=request.data)
@@ -24,14 +24,14 @@ class DiscountViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @swagger_auto_schema(responses={200: DiscountSerializer()}, tags=["Discounts"])
+    @swagger_auto_schema(responses={200: DiscountSerializer()}, tags=["Discount"])
     def retrieve(self, request, pk=None):
         queryset = Discount.objects.all()
         discount = get_object_or_404(queryset, pk=pk)
         serializer = DiscountSerializer(discount)
         return Response(serializer.data)
     
-    @swagger_auto_schema(request_body=DiscountSerializer, responses={200: DiscountSerializer(partial_update=True)}, tags=["Discounts"])
+    @swagger_auto_schema(request_body=DiscountSerializer, responses={200: DiscountSerializer()}, tags=["Discount"])
     def update(self, request, pk=None):
         discount = Discount.objects.get(pk=pk)
         serializer = DiscountSerializer(discount, data=request.data)
@@ -39,7 +39,7 @@ class DiscountViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @swagger_auto_schema(request_body=DiscountSerializer, responses={200: DiscountSerializer()}, tags=["Discounts"])
+    @swagger_auto_schema(request_body=DiscountSerializer, responses={200: DiscountSerializer()}, tags=["Discount"])
     def partial_update(self, request, pk=None):
         discount = Discount.objects.get(pk=pk)
         serializer = DiscountSerializer(discount, data=request.data, partial=True)
@@ -47,7 +47,7 @@ class DiscountViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @swagger_auto_schema(responses={204: 'No Content'}, tags=["Discounts"])
+    @swagger_auto_schema(responses={204: 'No Content'}, tags=["Discount"])
     def destroy(self, request, pk=None):
         discount = Discount.objects.get(pk=pk)
         discount.delete()

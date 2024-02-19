@@ -1,14 +1,21 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticated
+
+from account.models import UserAccount
+from user.models import UserUserType
 from .tokens import get_tokens_for_user, get_user_from_token
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
+    AccountSerializer,
     AccountUserSerializer,
     ForceChangePassSerializer,
     LoginSerializer,
+    UserSerializer,
+    UserUserTypeSerializer,
 )
 from django.contrib.auth.models import User
 from drf_yasg.utils import swagger_auto_schema
@@ -19,6 +26,7 @@ from django.contrib.auth.hashers import make_password
 
 
 class UserViewSet(ViewSet):
+
     @swagger_auto_schema(
         request_body=LoginSerializer,
         responses={status.HTTP_200_OK: "Logined Successful"},
@@ -120,6 +128,110 @@ class UserViewSet(ViewSet):
                 data=force_change_pass_serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    @swagger_auto_schema(responses={200: AccountSerializer(many=True)}, tags=["User"])
+    @permission_classes([IsAuthenticated])
+    @action(detail=False, methods=["get"])
+    def get_user_accounts(self, request, *args, **kwargs):
+        user = get_user_from_token(request.auth)
+        user_accounts = UserAccount.objects.filter(user=user)
+        account_tags = []
+        for user_account in user_accounts:
+            account_tags.append(user_account.account)
+        if not account_tags:
+            return Response(
+                {"detail": "No account tag."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = AccountSerializer(account_tags, many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        responses={200: AccountUserSerializer()},
+        operation_summary="Retrieve a user",
+        tags=["User"],
+    )
+    @permission_classes([IsAuthenticated])
+    def retrieve(self, request, pk=None):
+        model = get_object_or_404(User, pk=pk)
+        serializer = AccountUserSerializer(model)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        responses={200: AccountUserSerializer()},
+        operation_summary="Retrieve a user details",
+        tags=["User"],
+    )
+    @permission_classes([IsAuthenticated])
+    @action(detail=False, methods=["get"])
+    def get_user_details(self, request, *args, **kwargs):
+        user = get_user_from_token(request.auth)
+        # user_details = UserUserType.objects.get(user=user)
+        serializer = AccountUserSerializer(user)
+        # serializer.user_account=serializer.get_user_type(user)
+        # serializer.account=serializer.get_account(user)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        responses={200: UserSerializer(many=True)},
+        operation_summary="List all users",
+        tags=["User"],
+    )
+    @permission_classes([IsAuthenticated])
+    @action(detail=False, methods=["get"])
+    def get_user_list(self, request, *args, **kwargs):
+        if request.user.is_superuser:
+            queryset = User.objects.all()
+        else:
+            queryset = User.objects.all()
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=UserUserTypeSerializer,
+        responses={status.HTTP_201_CREATED: "User successfully tag a type"},
+        operation_description="Tag a user type",
+        tags=["User"],
+    )
+    @permission_classes([IsAuthenticated])
+    @action(detail=False, methods=["post"])
+    def tag_user_type(self, request, *args, **kwargs):
+        user = get_user_from_token(request.auth)
+
+        if user is None or not user.is_superuser:
+            return Response(
+                {"error": "Not authorized"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = UserUserTypeSerializer(data=request.data)
+
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                response_data = {"message": "User successfully tag a type"}
+                return Response(data=response_data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # @swagger_auto_schema(
+    #     request_body=UserSerializer,
+    #     responses={200: UserSerializer()},
+    #     operation_summary="Update a user",
+    #     tags=["User"],
+    # )
+    # @permission_classes([IsAuthenticated])
+    # def update(self, request, pk=None):
+    #     model = User.objects.get(pk=pk)
+    #     serializer = UserSerializer(model, data=request.data, partial=True)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # @api_view(["POST"])

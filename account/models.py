@@ -8,6 +8,7 @@ class Account(models.Model) :
     email = models.CharField(max_length = 50)
     contactNumber = models.CharField(max_length = 50)
     address = models.CharField(max_length = 250)
+    status = models.BooleanField(default=True)
     createdDate = models.DateTimeField(auto_now_add=True)
     createdByUserId = models.IntegerField(null=True)
     updatedDate = models.DateTimeField(null=True)

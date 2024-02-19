@@ -28,11 +28,15 @@ SECRET_KEY = "django-insecure-@2^58b1mw#)0xc+i63z^0onov9q*3bjx+li)a@7t(@27k@#21&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # ALLOWED_HOSTS = ["127.0.0.1"]
-# CORS_ALLOW_HEADERS = ["*"]
-# CORS_ORIGIN_ALLOW_ALL = True
 # Application definition
 # CSRF_COOKIE_SECURE = True
 ALLOWED_HOSTS = ['*']
+CORS_ALLOWED_ORIGINS = [
+    
+    # 'http://localhost:3000',  # Example: Allow requests from Flutter app served on localhost:3000
+    # Add other origins as needed...
+]
+CORS_ALLOW_ALL_ORIGINS = True
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -40,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_yasg",
@@ -49,6 +54,8 @@ INSTALLED_APPS = [
     "order",
     "classification",
     "discount",
+    "payment_method",
+    "user_type",
 ]
 
 SIMPLE_JWT = {
@@ -62,6 +69,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
