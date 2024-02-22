@@ -6,6 +6,7 @@ from product.models import Product
 # Create your models here.
 
 class Discount(models.Model):
+    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
     description = models.TextField()
@@ -23,6 +24,7 @@ class Discount(models.Model):
     updated_by_user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, related_name='discount_updated_by')
 
 class OrderDiscount(models.Model):
+    id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     discount = models.ForeignKey(Discount, on_delete=models.PROTECT)
     order_item = models.ForeignKey(OrderItem, on_delete=models.PROTECT, null=True, blank=True)

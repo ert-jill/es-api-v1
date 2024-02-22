@@ -19,13 +19,13 @@ from .serializers import (
 )
 from django.contrib.auth.models import User
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.viewsets import ViewSet
+from rest_framework import viewsets
 from django.contrib.auth.hashers import make_password
 
 # Create your views here.
 
 
-class UserViewSet(ViewSet):
+class UserViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
         request_body=LoginSerializer,
@@ -47,7 +47,7 @@ class UserViewSet(ViewSet):
         )
 
     @swagger_auto_schema(
-        request_body=AccountUserSerializer,
+        request_body=UserSerializer,
         responses={status.HTTP_201_CREATED: "User successfully created"},
         operation_description="Create account user end-point",
         tags=["User"],
@@ -55,14 +55,14 @@ class UserViewSet(ViewSet):
     @permission_classes([IsAuthenticated])
     @action(detail=False, methods=["post"])
     def signup(self, request, *args, **kwargs):
-        user = get_user_from_token(request.auth)
+        # user = get_user_from_token(request.auth)
 
-        if user is None or not user.is_superuser:
-            return Response(
-                {"error": "Not authorized"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+        # if user is None or not user.is_superuser:
+        #     return Response(
+        #         {"error": "Not authorized"}, status=status.HTTP_401_UNAUTHORIZED
+        #     )
 
-        account_user_serializer = AccountUserSerializer(data=request.data)
+        account_user_serializer = UserSerializer(data=request.data)
 
         if account_user_serializer.is_valid():
             try:

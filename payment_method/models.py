@@ -4,6 +4,7 @@ from account.models import Account
 # Create your models here.
 
 class PaymentMethod(models.Model):
+    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
     account_number = models.CharField(max_length=255, null=True, blank=True,)

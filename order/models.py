@@ -9,6 +9,7 @@ from product.models import Product
 
 
 class Order(models.Model):
+    id = models.BigAutoField(primary_key=True)
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="orders_account"
     )  # acount who own the order
@@ -60,6 +61,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    id = models.BigAutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     product = models.ForeignKey(
         Product, on_delete=models.PROTECT, to_field='sku', db_column='product_sku'

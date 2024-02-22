@@ -128,10 +128,18 @@ WSGI_APPLICATION = "es_api.wsgi.application"
 #     }
 # }
 DATABASES = {
-    "default": dj_database_url.config(
-        default="postgresql://ert:L8fYxjnsTFA2KbwC-XKjww@meteor-rat-834.j77.cockroachlabs.cloud:26257/defaultdb?sslmode=require",
-        engine="django_cockroachdb",
-    )
+    # "default": dj_database_url.config(
+    #     default="postgresql://ert:L8fYxjnsTFA2KbwC-XKjww@meteor-rat-834.j77.cockroachlabs.cloud:26257/defaultdb?sslmode=require",
+    #     engine="django_cockroachdb",
+    # )
+    'default': {
+       'ENGINE': 'django.db.backends.postgresql',
+       'NAME': 'TITANS',
+       'USER': 'postgres',
+       'PASSWORD': '1102',
+       'HOST': 'localhost',
+       'PORT': '5432',
+   }
 }
 
 
