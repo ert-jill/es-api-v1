@@ -6,7 +6,7 @@ from .models import Discount
 
 class DiscountSerializer(serializers.ModelSerializer):
     discounted_product =  serializers.PrimaryKeyRelatedField(queryset= Product.objects.all(), required = False)
-    expiry_date = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S') #YYYY-MM-DDTHH:MM:SS
+    expiry_date = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S', required=False) #YYYY-MM-DDTHH:MM:SS
     class Meta:
         model = Discount
         fields = [
