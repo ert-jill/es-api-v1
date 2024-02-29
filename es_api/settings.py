@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "user_type",
     "area",
     "table",
+    "printer",
 ]
 
 SIMPLE_JWT = {
