@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     "discount",
     "payment_method",
     "user_type",
+    "area",
+    "table",
 ]
 
 SIMPLE_JWT = {
@@ -101,7 +103,7 @@ REST_FRAMEWORK = {
         # "rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10,
+    "PAGE_SIZE": 100,
 }
 
 WSGI_APPLICATION = "es_api.wsgi.application"

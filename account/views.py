@@ -36,7 +36,7 @@ class AccountViewSet(ViewSet):
 
         if account_serializer.is_valid():
             try:
-                account_serializer.save()
+                account_serializer.save(created_by_user=user)
                 response_data = {"message": "Account successfully created"}
                 return Response(data=response_data, status=status.HTTP_201_CREATED)
             except Exception as e:

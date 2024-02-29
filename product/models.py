@@ -29,6 +29,7 @@ class GroupProduct(models.Model):
     parent_product =  models.ForeignKey(Product, on_delete=models.PROTECT, related_name='group_product_parent_product')
     product =  models.ForeignKey(Product, on_delete=models.PROTECT, related_name='group_product_product')
     quantity = models.PositiveBigIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
     created_by_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='group_product_created_by')
     deleted_date = models.DateTimeField(null=True, blank=True)

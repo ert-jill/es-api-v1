@@ -6,6 +6,7 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from classification.models import Classification
 from classification.serializers import ClassificationSerializer
+from user.models import UserUserAccount
 from user.tokens import get_user_from_token
 
 # Create your views here.
@@ -29,7 +30,7 @@ class ClassificationViewSet(viewsets.ViewSet):
             )
         serializer = ClassificationSerializer(data=request.data)
         # get user's account
-        user_account_instance = user.useraccount_set.order_by("-dateAdded").first()
+        user_account_instance = UserUserAccount.objects.get(pk=user.id)
         # check if user's has account tagged
         if user_account_instance:
             # get assigned account
@@ -52,7 +53,7 @@ class ClassificationViewSet(viewsets.ViewSet):
     def list(self, request):
         user = get_user_from_token(request.auth)
         # get user's account
-        user_account_instance = user.useraccount_set.order_by("-dateAdded").first()
+        user_account_instance = UserUserAccount.objects.get(pk=user.id)
         if user_account_instance:
             # get assigned account
             account_instance = user_account_instance.account

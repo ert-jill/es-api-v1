@@ -5,6 +5,7 @@ from .models import Account
 # default account serializer
 class AccountSerializer(serializers.ModelSerializer):
     # owner = serializers.SerializerMethodField(read_only=True)
+    id = serializers.CharField(read_only=True)
     class Meta:
         model = Account
         fields = [
@@ -17,14 +18,9 @@ class AccountSerializer(serializers.ModelSerializer):
             "status",
         ]
         read_only_fields = (
-            "name",
-            "ownerName",
-            "email",
-            "contactNumber",
-            "address",
+            "id",
             "status",
         )
-        write_only_fields = ("id")
         ref_name = "Account"
 
     # auto detect the owner variable where its result to be stored

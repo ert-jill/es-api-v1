@@ -5,14 +5,14 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Account(models.Model):
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=120)
+    name = models.CharField(unique=True, max_length=120)
     ownerName = models.CharField(max_length=50)
     email = models.CharField(max_length=50)
     contactNumber = models.CharField(max_length=50)
     address = models.CharField(max_length=250)
     status = models.BooleanField(default=True)
     createdDate = models.DateTimeField(auto_now_add=True)
-    createdByUserId = models.BigIntegerField(null=True)
+    created_by_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='account_created_by')
     updatedDate = models.DateTimeField(null=True)
     deletedDate = models.DateTimeField(null=True)
     deletedByUserId = models.BigIntegerField(null=True)
