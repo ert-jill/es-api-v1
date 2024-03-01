@@ -3,10 +3,16 @@ from django.contrib.auth.models import User
 
 
 # Create your models here.
+class AccountType(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    name = models.CharField(unique=True, max_length=120)
+    code = models.CharField(unique=True, max_length=120)
+
 class Account(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(unique=True, max_length=120)
     ownerName = models.CharField(max_length=50)
+    account_type = models.ForeignKey(AccountType, on_delete=models.PROTECT, related_name='account_type')
     email = models.CharField(max_length=50)
     contactNumber = models.CharField(max_length=50)
     address = models.CharField(max_length=250)
@@ -16,7 +22,6 @@ class Account(models.Model):
     updatedDate = models.DateTimeField(null=True)
     deletedDate = models.DateTimeField(null=True)
     deletedByUserId = models.BigIntegerField(null=True)
-
 
 class UserAccount(models.Model):
     id = models.BigAutoField(primary_key=True)
