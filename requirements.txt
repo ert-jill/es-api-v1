@@ -10,3 +10,4 @@ djangorestframework_simplejwt
 django-cockroachdb==5.0.*
 dj_database_url
 drf-yasg
+gunicorn
