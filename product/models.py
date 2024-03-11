@@ -13,6 +13,7 @@ class Product(models.Model):
     is_group_parent = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='product_account')
+    receipt_label = models.CharField(max_length=50)
     created_date = models.DateTimeField(auto_now_add=True)
     created_by_user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='product_created_by')
     deleted_date = models.DateTimeField(null=True, blank=True)
@@ -36,3 +37,14 @@ class GroupProduct(models.Model):
     deleted_by_user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, related_name='group_product_deleted_by')
     updated_date = models.DateTimeField(auto_now=True)
     updated_by_user = models.ForeignKey(User, on_delete=models.PROTECT, null=True, blank=True, related_name='group_product_updated_by')
+
+
+# class ProductClassification(models.Model):
+#     id = models.BigAutoField(primary_key=True)
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+#     classification = models.ForeignKey(Classification, on_delete=models.CASCADE)
+#     status = models.BooleanField(default=True)
+#     dateAdded = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         unique_together = ("product", "classification")

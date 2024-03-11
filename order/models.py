@@ -9,15 +9,23 @@ from product.models import Product
 
 
 class Order(models.Model):
+    ORDER_STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('VOID', 'Void'),
+        ('BILL OUT', 'Bill Out'),
+        ('COMPLETED', 'Completed'),
+    )
     id = models.BigAutoField(primary_key=True)
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="orders_account"
     )  # acount who own the order
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    total_vat = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     total_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     customer = models.CharField(
         max_length=255, null=True, blank=True
     )  # purchasing customer
+
     is_void = models.BooleanField(default=False)
     is_void_by_user = models.ForeignKey(
         User,
@@ -38,26 +46,10 @@ class Order(models.Model):
         on_delete=models.PROTECT,
         related_name="orders_updated_by",
     )
-
-    # Payment Information
-    payment_method = models.CharField(
-        max_length=50, null=True, blank=True
-    )  # cash, card, wallet
-    payment_status = models.CharField(
-        max_length=20, null=True, blank=True
-    )  # pending, completed
-    payment_reference_no = models.CharField(
-        max_length=100, null=True, blank=True
-    )  # payment reference
-
-    # Shipping Information
-    shipping_address = models.TextField(null=True, blank=True)
-    shipping_status = models.CharField(max_length=20, null=True, blank=True)
-    tracking_info = models.CharField(max_length=100, null=True, blank=True)
-    # Order Status
     order_status = models.CharField(
-        max_length=20, null=True, blank=True, default=""
+        max_length=20, choices =ORDER_STATUS_CHOICES, default='PENDING'
     )  # open, ongoing, billout, closed
+    tables = models.CharField(max_length=255, null=True, blank=True)
 
 
 class OrderItem(models.Model):

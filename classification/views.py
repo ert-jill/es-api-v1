@@ -8,6 +8,7 @@ from classification.models import Classification
 from classification.serializers import ClassificationSerializer
 from user.models import UserUserAccount
 from user.tokens import get_user_from_token
+from drf_yasg import openapi
 
 # Create your views here.
 
@@ -30,7 +31,7 @@ class ClassificationViewSet(viewsets.ViewSet):
             )
         serializer = ClassificationSerializer(data=request.data)
         # get user's account
-        user_account_instance = UserUserAccount.objects.get(pk=user.id)
+        user_account_instance = UserUserAccount.objects.get(user=request.user)
         # check if user's has account tagged
         if user_account_instance:
             # get assigned account
@@ -49,11 +50,26 @@ class ClassificationViewSet(viewsets.ViewSet):
         responses={200: ClassificationSerializer(many=True)},
         operation_summary="List all classifications",
         tags=["Classification"],
+         manual_parameters=[
+        openapi.Parameter(
+            'parent',
+            openapi.IN_QUERY,
+            description="Filter by classification parent id",
+            type=openapi.TYPE_NUMBER,
+            required=False
+        ), openapi.Parameter(
+            'depth',
+            openapi.IN_QUERY,
+            description="Filter classification by depth value",
+            type=openapi.TYPE_NUMBER,
+            required=False
+        )
+    ]
     )
     def list(self, request):
         user = get_user_from_token(request.auth)
         # get user's account
-        user_account_instance = UserUserAccount.objects.get(pk=user.id)
+        user_account_instance = UserUserAccount.objects.get(user=user)
         if user_account_instance:
             # get assigned account
             account_instance = user_account_instance.account
@@ -64,9 +80,19 @@ class ClassificationViewSet(viewsets.ViewSet):
             return Response(
                 {"error": "Not authorized"}, status=status.HTTP_401_UNAUTHORIZED
             )
-        queryset = Classification.objects.filter(
-            account=account_instance
-        )  # just get the classification for the specific account
+        
+        parent_id = request.query_params.get('parent')
+        depth = request.query_params.get('depth')
+        # Start with an initial queryset containing classifications for the specific account
+        queryset = Classification.objects.filter(account=account_instance)
+        # Apply filtering based on parent_id if it is provided
+        if parent_id:
+            queryset = queryset.filter(parent=parent_id)
+        # Apply filtering based on depth if it is provided
+        if depth:
+            # Depending on how depth is used, you might need to adjust this condition
+            queryset = queryset.filter(depth=depth)
+
         serializer = ClassificationSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

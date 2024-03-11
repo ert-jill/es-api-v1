@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from product.models import Product
 from product.serializers import ProductSerializer
+from table.models import Table
+from user.models import UserUserAccount
 from user.serializers import UserSerializer
 from user.tokens import User
 from .models import Order, OrderItem
@@ -10,10 +12,12 @@ from django.db import transaction
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField(read_only=True)
-
+    sku = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = OrderItem
         fields = (
+            "id",
+            "sku",
             "order",
             "product",
             "quantity",
@@ -21,74 +25,58 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "product_discount",
             "is_void",
         )
+    
 
     def get_product(self, obj):
         # Assuming 'product' is the related field in OrderItem
-        product_instance = obj.get("product")
+        product_instance = obj.product
         return ProductSerializer(product_instance).data
+    
+    def get_sku(self, obj):
+        # Assuming 'product' is the related field in OrderItem
+        product_instance = obj.product
+        return product_instance.sku
 
 
 class AddOrderItemSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(
         queryset=Order.objects.all(), required=True
     )
-    sku = serializers.CharField(write_only=True, required=True)
+    sku = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
     product = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = OrderItem
         fields = (
-            "sku",
+            "id",
             "order",
             "product",
             "quantity",
             "product_total",
             "product_discount",
             "is_void",
-        )
-        read_only_fields = (
-            "product_total",
-            "product_discount",
-            "product",
-            "is_void",
-        )
-        write_only_fields = (
             "sku",
-            "order",
-            "quantity",
         )
-
+        read_only_fields = ("id","product_total", "product_discount", "is_void", "ptroduct")
         depth = 1
 
     def get_product(self, obj):
+
         # Assuming 'product' is the related field in OrderItem
+
         product_instance = obj.get("product")
+
         return ProductSerializer(product_instance).data
 
-    def add_order_item(self, validated_data):
-        # get user
-        user = self.context.get("user")
-        user_account_instance = user.useraccount_set.order_by("-dateAdded").first()
-        # Extract the product ID from validated_data
-        sku = validated_data.pop("sku", None)
-        order = validated_data.get("order")
-
-        # Assuming your model has a 'product' field that is a ForeignKey to the Product model
-        product = Product.objects.get(sku=sku)
-
-        # order = order_id
-        user_account = user_account_instance.account
-        orders_account = order.account
-        product_account = product.account
-        if (
-            user_account_instance.account != product_account
-            and user_account != orders_account
-        ):
-            raise serializers.ValidationError(
-                "User account and product account or order account do not match."
-            )
-
+    def create(self, validated_data):
+        # user = self.context['request'].user  # Accessing user data from context
+        # validated_data['created_by'] = user
+        sku = validated_data.pop("sku")
         # Calculate total price based on quantity and product price
+        product = Product.objects.get(sku=sku)
         validated_data["product"] = product
         # validated_data["order"] = order
         quantity = validated_data.get("quantity", 0)
@@ -101,8 +89,7 @@ class AddOrderItemSerializer(serializers.ModelSerializer):
         validated_data["product_description"] = product.description
         validated_data["product_total"] = total_price
 
-        # Create the OrderItem instance
-        # use transaction for data integrity
+        order = validated_data.get("order")
         with transaction.atomic():
             order_item_found = OrderItem.objects.filter(
                 order=validated_data.get("order"), product=validated_data.get("product")
@@ -116,19 +103,69 @@ class AddOrderItemSerializer(serializers.ModelSerializer):
 
                 order_item.quantity = quantity
                 order_item.product_total = total_price
-                order_item.updated_by_user = user
+                order_item.updated_by_user = validated_data["created_by_user"]
                 order_item.save()
 
             else:
-                order_item = OrderItem.objects.create(
-                    created_by_user=user, **validated_data
-                )
+                order_item = OrderItem.objects.create(**validated_data)
 
             order.total += total_price
-            order.updated_by_user = user
+            order.updated_by_user = order_item.created_by_user
             order.save()
 
         return order_item
+
+
+class AddOrderItemQuantitySerializer(serializers.ModelSerializer):
+    order = serializers.PrimaryKeyRelatedField( read_only=True)
+    product = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = OrderItem
+        fields = (
+            "id",
+            "order",
+            "product",
+            "quantity",
+            "product_total",
+            "product_discount",
+            "is_void",
+        )
+        read_only_fields = (
+            "id",
+            "order",
+            "product",
+            "product_total",
+            "product_discount",
+            "is_void",
+        )
+        depth=1
+    def get_product(self, obj):
+
+        # Assuming 'product' is the related field in OrderItem
+
+        product_instance = obj.product
+
+        return ProductSerializer(product_instance).data
+    def update(self, instance, validated_data):
+        product = instance.product
+        quantity = validated_data.get("quantity")
+        product_price = product.price
+        total_price = quantity * product_price
+
+        order = instance.order
+        with transaction.atomic():
+
+            order.total -= (
+                instance.product_total
+            )  # update the order total remove the old order item product total
+            instance.quantity = quantity
+            instance.product_total = total_price
+            instance.save()
+
+            order.total += total_price
+            order.updated_by_user = instance.updated_by_user
+            order.save()
+            return instance
 
 
 class VoidOrderItemSerializer(serializers.ModelSerializer):
@@ -191,8 +228,8 @@ class VoidOrderItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "User account and product account or order account do not match."
             )
-        
-         # Calculate total price based on quantity and product price
+
+        # Calculate total price based on quantity and product price
         validated_data["product"] = product
         product_price = product.price
         total_price = 0
@@ -203,12 +240,9 @@ class VoidOrderItemSerializer(serializers.ModelSerializer):
         validated_data["product_description"] = product.description
         validated_data["product_total"] = total_price
 
-
         # use transaction for data integrity
         with transaction.atomic():
-            order_item_found = OrderItem.objects.filter(
-                order=order, product=product
-            )
+            order_item_found = OrderItem.objects.filter(order=order, product=product)
             if order_item_found.exists():
                 order_item = order_item_found[0]  # get the order item found
                 order.total -= (
@@ -237,7 +271,7 @@ class UserCreatedBySeriaizer(serializers.ModelSerializer):
 
 
 class CreateOrderSerializer(serializers.ModelSerializer):
-    
+
     order_items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
@@ -253,10 +287,8 @@ class CreateOrderSerializer(serializers.ModelSerializer):
             # "created_date",
             # "updated_date",
             # "updated_by_user",
-            "payment_method",
             "payment_status",
             "shipping_address",
-            "shipping_status",
             "tracking_info",
             "order_status",
         )
@@ -317,3 +349,54 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         #         raise serializers.ValidationError(order_items_serializer.errors)
         # Serialize the order instance along with its order items
         return order_instance
+
+
+class OrderSerializers(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "is_void",
+            "total",
+            "total_discount",
+            "total_vat",
+            "order_items",
+            "customer",
+            "order_status",
+            "tables",
+        ]
+        read_only_fields = (
+            "id",
+            "is_void",
+            "total",
+            "total_discount",
+            "order_items",
+            "order_status",
+        )
+
+    def validate_tables(self, value):
+        """
+        Validate that the tables is vacant for dine-in orders.
+        """
+        if value is not None:
+            t = value.split(",")
+            to_update_table = Table.objects.filter(id__in=t, order=None)
+            if len(t) != len(to_update_table):
+                raise serializers.ValidationError("Table not available")
+        return value
+
+    def create(self, validated_data):
+
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)
+            tables = validated_data.get("tables")
+            if tables is not None:
+                t = tables.split(",")
+                updated_records = Table.objects.filter(id__in=t, order=None).update(
+                    order=order
+                )
+                if len(t) != updated_records:
+                    raise Exception("Table is not available, but pass the validation")
+        return order

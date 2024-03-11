@@ -1,11 +1,13 @@
 from rest_framework import serializers
+from classification.models import ProductClassification
+from classification.serializers import ClassificationSerializer
 
 from user.models import UserUserAccount
 from .models import GroupProduct, Product
 from django.db import transaction
 
 
-class GroupProductItemSerializer(serializers.ModelSerializer):
+class   GroupProductItemSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     sku = serializers.CharField(write_only=True, required=True)
 
@@ -46,11 +48,21 @@ class GroupProductItemSerializer(serializers.ModelSerializer):
                 )
         # Always return the validated data
         return data
+    
+class ProductClassificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model =ProductClassification
+        fields = [
+            "classification"
+        ]
+        # depth = 1
+        ref_name = "ProductClassification"
 
 
 class ProductSerializer(serializers.ModelSerializer):
     product_items = GroupProductItemSerializer(many=True, required=False)
-
+    product_classifications = ProductClassificationSerializer(many=True, required=False, write_only=True)
+    classifications = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Product
         fields = [
@@ -61,10 +73,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "stocks",
             "product_items",
+            "product_classifications",
+            "classifications"   
         ]
-        read_only_fields = ("id",)
+        read_only_fields = ("id","classifications")
         ref_name = "GroupProduct"
 
+    def get_classifications(self, obj):
+        classifications_instance = obj.productclassification_set.all()
+        classifications = [classification.classification for classification in classifications_instance]
+        return ClassificationSerializer(classifications, many=True).data
+    
     def create(self, validated_data):
         # get user
         user = self.context.get("user")
@@ -79,9 +98,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
         # get product items
         product_items_data = validated_data.pop("product_items", [])
-
+        product_classifications = validated_data.pop('product_classifications',[])
         # use transaction for data integrity
         with transaction.atomic():
+
 
             # Check if order_items_data is present before attempting to create order items
             if product_items_data is not None and product_items_data:
@@ -99,9 +119,14 @@ class ProductSerializer(serializers.ModelSerializer):
                 else:
                     # Rollback the transaction if order items are not valid
                     raise serializers.ValidationError(product_items_serializer.errors)
-            else :
+            else:
                 product_instance = Product.objects.create(created_by_user_id=user.id, account=account_instance,
                     **validated_data
                 )
+            if product_classifications is not None and product_classifications:
+                product_classification_serializer = ProductClassificationSerializer(data = product_classifications, many=True)
+                product_classification_serializer.save(product=product_instance,created_by_user_id=user.id)
+            else:
+                raise product_classification_serializer.ValidationError({"accclassificationount": "Required"})
         # Serialize the order instance along with its order items
         return product_instance
