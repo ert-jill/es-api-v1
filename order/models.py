@@ -4,28 +4,30 @@ from django.db import models
 from django.db import models
 from django.contrib.auth.models import User
 from account.models import Account
-
 from product.models import Product
+from table.models import Table
 
 
 class Order(models.Model):
     ORDER_STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
-        ('VOID', 'Void'),
-        ('BILL OUT', 'Bill Out'),
-        ('COMPLETED', 'Completed'),
+        (0, 'On Going'),
+        (3, 'Void'),
+        (2, 'Bill Out'),
+        (1, 'Completed'),
     )
     id = models.BigAutoField(primary_key=True)
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="orders_account"
     )  # acount who own the order
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    table = models.ForeignKey(
+        Table, on_delete=models.PROTECT, null=True, related_name="orders_table"
+    )  
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     total_vat = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     total_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     customer = models.CharField(
         max_length=255, null=True, blank=True
     )  # purchasing customer
-
     is_void = models.BooleanField(default=False)
     is_void_by_user = models.ForeignKey(
         User,
@@ -46,10 +48,8 @@ class Order(models.Model):
         on_delete=models.PROTECT,
         related_name="orders_updated_by",
     )
-    order_status = models.CharField(
-        max_length=20, choices =ORDER_STATUS_CHOICES, default='PENDING'
-    )  # open, ongoing, billout, closed
-    tables = models.CharField(max_length=255, null=True, blank=True)
+    status = models.IntegerField(choices = ORDER_STATUS_CHOICES, default=0
+    ) 
 
 
 class OrderItem(models.Model):
@@ -68,12 +68,6 @@ class OrderItem(models.Model):
     quantity = models.DecimalField(
         max_digits=10, decimal_places=2
     )  # product_quantity upon purchase
-    product_total = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True
-    )  # product_discount upon purchase
-    product_discount = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, default=0.0
-    )  # product_discount upon purchase
     is_void = models.BooleanField(default=False)  # product_is_void upon purchase
     is_void_by_user = models.ForeignKey(
         User,
@@ -94,5 +88,6 @@ class OrderItem(models.Model):
         on_delete=models.PROTECT,
         related_name="order_items_updated_by",
     )
+    is_placed = models.BooleanField(default=False)
     class Meta:
         unique_together = ('order', 'product')

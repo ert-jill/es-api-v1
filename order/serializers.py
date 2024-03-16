@@ -1,15 +1,15 @@
 from rest_framework import serializers
-
 from product.models import Product
 from product.serializers import ProductSerializer
-from table.models import Table
-from user.models import UserUserAccount
-from user.serializers import UserSerializer
 from user.tokens import User
 from .models import Order, OrderItem
 from django.db import transaction
 
-
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+        
 class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField(read_only=True)
     sku = serializers.SerializerMethodField(read_only=True)
@@ -67,7 +67,7 @@ class AddOrderItemSerializer(serializers.ModelSerializer):
 
         # Assuming 'product' is the related field in OrderItem
 
-        product_instance = obj.get("product")
+        product_instance = obj.product
 
         return ProductSerializer(product_instance).data
 
@@ -351,52 +351,51 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         return order_instance
 
 
-class OrderSerializers(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True, read_only=True)
+# class OrderSerializers(serializers.ModelSerializer):
+#     order_items = OrderItemSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Order
-        fields = [
-            "id",
-            "is_void",
-            "total",
-            "total_discount",
-            "total_vat",
-            "order_items",
-            "customer",
-            "order_status",
-            "tables",
-        ]
-        read_only_fields = (
-            "id",
-            "is_void",
-            "total",
-            "total_discount",
-            "order_items",
-            "order_status",
-        )
+#     class Meta:
+#         model = Order
+#         fields = [
+#             "id",
+#             "is_void",
+#             "total",
+#             "total_discount",
+#             "total_vat",
+#             "order_items",
+#             "customer",
+#             "order_status",
+#         ]
+#         read_only_fields = (
+#             "id",
+#             "is_void",
+#             "total",
+#             "total_discount",
+#             "order_items",
+#             "order_status",
+#         )
 
-    def validate_tables(self, value):
-        """
-        Validate that the tables is vacant for dine-in orders.
-        """
-        if value is not None:
-            t = value.split(",")
-            to_update_table = Table.objects.filter(id__in=t, order=None)
-            if len(t) != len(to_update_table):
-                raise serializers.ValidationError("Table not available")
-        return value
+#     def validate_tables(self, value):
+#         """
+#         Validate that the tables is vacant for dine-in orders.
+#         """
+#         if value is not None:
+#             t = value.split(",")
+#             to_update_table = Table.objects.filter(id__in=t, order=None)
+#             if len(t) != len(to_update_table):
+#                 raise serializers.ValidationError("Table not available")
+#         return value
 
-    def create(self, validated_data):
+#     def create(self, validated_data):
 
-        with transaction.atomic():
-            order = Order.objects.create(**validated_data)
-            tables = validated_data.get("tables")
-            if tables is not None:
-                t = tables.split(",")
-                updated_records = Table.objects.filter(id__in=t, order=None).update(
-                    order=order
-                )
-                if len(t) != updated_records:
-                    raise Exception("Table is not available, but pass the validation")
-        return order
+#         with transaction.atomic():
+#             order = Order.objects.create(**validated_data)
+#             tables = validated_data.get("tables")
+#             if tables is not None:
+#                 t = tables.split(",")
+#                 updated_records = Table.objects.filter(id__in=t, order=None).update(
+#                     order=order
+#                 )
+#                 if len(t) != updated_records:
+#                     raise Exception("Table is not available, but pass the validation")
+#         return order

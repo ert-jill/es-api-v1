@@ -15,7 +15,7 @@ class TableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Table
-        fields = ("id", "name", "code", "order", "area", "is_active", "top", "left")
+        fields = ("id", "name", "code", "area", "is_active", "top", "left")
         read_only_fields = (
             "id",
             "is_active",
@@ -28,7 +28,7 @@ class TableReadSerializer(TableSerializer):
 
     class Meta:
         model = Table
-        fields = ("id", "name", "code", "area", "order", "is_active", "top", "left")
+        fields = ("id", "name", "code", "area", "is_active", "top", "left")
         read_only_fields = (
             "id",
             "is_active",
