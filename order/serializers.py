@@ -12,31 +12,36 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ("account","created_by_user")
         
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = serializers.SerializerMethodField(read_only=True)
-    sku = serializers.SerializerMethodField(read_only=True)
+    product = serializers.SlugRelatedField(
+        queryset=Product.objects.all(),
+        slug_field='sku',
+        required=True
+    )
+    order = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(), required=True
+    )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        product_instance = instance.product  # Assuming product is a ForeignKey field in Order model
+        product_serializer = ProductSerializer(product_instance)
+        representation['product'] = product_serializer.data
+        return representation
     class Meta:
         model = OrderItem
         fields = (
             "id",
-            "sku",
             "order",
             "product",
             "quantity",
-            "product_total",
-            "product_discount",
             "is_void",
+            "is_placed",
         )
+        read_only_fields = ("id",)
     
-
-    def get_product(self, obj):
-        # Assuming 'product' is the related field in OrderItem
-        product_instance = obj.product
-        return ProductSerializer(product_instance).data
-    
-    def get_sku(self, obj):
-        # Assuming 'product' is the related field in OrderItem
-        product_instance = obj.product
-        return product_instance.sku
+    def create(self, validated_data):
+        product = validated_data.pop("product")
+        return OrderItem.objects.create( product = product, product_name=product.name, product_price = product.price, product_description = product.description, **validated_data)
 
 
 class AddOrderItemSerializer(serializers.ModelSerializer):
@@ -141,17 +146,19 @@ class AddOrderItemQuantitySerializer(serializers.ModelSerializer):
         )
         depth=1
     def get_product(self, obj):
-
         # Assuming 'product' is the related field in OrderItem
-
         product_instance = obj.product
-
         return ProductSerializer(product_instance).data
+    
     def update(self, instance, validated_data):
         product = instance.product
         quantity = validated_data.get("quantity")
         product_price = product.price
         total_price = quantity * product_price
+    def get(self, instance):
+        # Custom logic to retrieve data from the instance or serializer's context
+        # You can access instance data or serializer context using self.instance and self.context
+        return self.instance.some_method()
 
         order = instance.order
         with transaction.atomic():

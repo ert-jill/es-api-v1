@@ -89,5 +89,5 @@ class OrderItem(models.Model):
         related_name="order_items_updated_by",
     )
     is_placed = models.BooleanField(default=False)
-    class Meta:
-        unique_together = ('order', 'product')
+    # class Meta:
+    #     unique_together = ('order', 'product')
