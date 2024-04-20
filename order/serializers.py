@@ -40,8 +40,16 @@ class OrderItemSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
     
     def create(self, validated_data):
+        # user = validated_data.get("created_by_user")
         product = validated_data.pop("product")
-        return OrderItem.objects.create( product = product, product_name=product.name, product_price = product.price, product_description = product.description, **validated_data)
+        # order = validated_data.get("order")
+        # quantity = validated_data.get("order")
+        # with transaction.atomic():
+            # order.total_amount += product.price * quantity
+            # order.updated_by_user = user
+            # order.save()
+        orderItem = OrderItem.objects.create( product = product, product_name=product.name, product_price = product.price, product_description = product.description, **validated_data)
+        return orderItem
 
 
 class AddOrderItemSerializer(serializers.ModelSerializer):
